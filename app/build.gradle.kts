@@ -21,8 +21,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // FIRMA DEL APK: llave (.jks) generada para la app. Se deja en el repositorio porque la pauta lo pide.
+    signingConfigs {
+        create("release") {
+            storeFile = file("../keystore/mpazneb-release.jks")
+            storePassword = "Mpaz2026Release"
+            keyAlias = "mpazneb"
+            keyPassword = "Mpaz2026Release"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = false
             }
