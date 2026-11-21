@@ -17,6 +17,7 @@ import cl.duoc.mpazneb.model.Modulo
 import cl.duoc.mpazneb.model.Perfil
 import cl.duoc.mpazneb.nativo.Camara
 import cl.duoc.mpazneb.nativo.Ubicacion
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,22 +66,50 @@ class PerfilViewModel(application: Application) : BaseViewModel(application) {
 
 // ---------------- Pestaña Actividades ----------------
 
+/** Estado de la conexión con el microservicio (se muestra arriba de la lista). */
+enum class Conexion { SINCRONIZANDO, CONECTADO, SIN_CONEXION }
+
 data class ActividadesUiState(
     val actividades: List<ActividadEntity> = emptyList(),
     val modulo: Modulo? = null, // null = todos
-    val curso: Int? = null      // null = todos
+    val curso: Int? = null,     // null = todos
+    val conexion: Conexion = Conexion.SINCRONIZANDO
 )
 
 class ActividadesViewModel(application: Application) : BaseViewModel(application) {
     private val repository = ActividadRepository(db)
     private val modulo = MutableStateFlow<Modulo?>(null)
     private val curso = MutableStateFlow<Int?>(null)
+    private val conexion = MutableStateFlow(Conexion.SINCRONIZANDO)
 
-    /** Si cambia la tabla (Room) o un filtro, la lista se recalcula sola. */
+    /** Si cambia la tabla (Room), un filtro o la conexión, la lista se recalcula sola. */
     val uiState: StateFlow<ActividadesUiState> =
-        combine(repository.observarTodas(), modulo, curso) { lista, m, c ->
-            ActividadesUiState(lista.filter { (m == null || it.modulo == m) && (c == null || it.curso == c) }, m, c)
+        combine(repository.observarTodas(), modulo, curso, conexion) { lista, m, c, estado ->
+            ActividadesUiState(lista.filter { (m == null || it.modulo == m) && (c == null || it.curso == c) }, m, c, estado)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ActividadesUiState())
+
+    init {
+        sincronizar()
+    }
+
+    /**
+     * MICROSERVICIO: trae las actividades y preguntas (GET) y actualiza Room.
+     * Si no hay conexión, se siguen mostrando los datos guardados en el teléfono.
+     */
+    fun sincronizar() {
+        conexion.value = Conexion.SINCRONIZANDO
+        viewModelScope.launch {
+            conexion.value = try {
+                repository.sincronizar()
+                Conexion.CONECTADO
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("MPAZ", "Sin conexión con el microservicio", e)
+                Conexion.SIN_CONEXION
+            }
+        }
+    }
 
     fun filtrarModulo(valor: Modulo?) { modulo.value = valor }
     fun filtrarCurso(valor: Int?) { curso.value = valor }

@@ -48,4 +48,16 @@ class DetalleActividadViewModel(
     fun eliminarPregunta(pregunta: PreguntaEntity) {
         executeOperation { repository.eliminarPregunta(pregunta) }
     }
+
+    /** true cuando la actividad se eliminó: la pantalla vuelve al panel. */
+    val eliminada = MutableStateFlow(false)
+
+    /** DELETE en el microservicio (solo borradores) y luego se borra de Room. */
+    fun eliminarActividad() {
+        val actividad = uiState.value.actividad ?: return
+        executeOperation {
+            val error = repository.eliminar(actividad)
+            if (error == null) eliminada.value = true else mensaje.value = error
+        }
+    }
 }

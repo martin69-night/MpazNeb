@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import cl.duoc.mpazneb.data.local.entity.ActividadEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,20 @@ interface ActividadDao {
 
     @Update
     suspend fun update(actividad: ActividadEntity)
+
+    // ---------- Sincronización con el microservicio ----------
+
+    /** Upsert = si el id existe lo actualiza, si no lo inserta (se usa con lo que responde el microservicio). */
+    @Upsert
+    suspend fun upsert(actividad: ActividadEntity)
+
+    @Upsert
+    suspend fun upsertAll(actividades: List<ActividadEntity>)
+
+    @Query("DELETE FROM actividades WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    /** Borra las que ya no existen en el microservicio. */
+    @Query("DELETE FROM actividades WHERE id NOT IN (:ids)")
+    suspend fun deleteNotIn(ids: List<Long>)
 }

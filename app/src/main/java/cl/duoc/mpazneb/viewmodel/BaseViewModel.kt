@@ -1,9 +1,12 @@
 package cl.duoc.mpazneb.viewmodel
 
 import android.app.Application
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.mpazneb.data.local.AppDatabase
+import cl.duoc.mpazneb.data.remote.mensajeDeError
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -37,9 +40,13 @@ abstract class BaseViewModel(application: Application) : AndroidViewModel(applic
             _isLoading.value = true
             try {
                 operation()
+            } catch (e: CancellationException) {
+                throw e // se salió de la pantalla: no es un error
             } catch (e: Exception) {
-                // Si algo falla al guardar, la app no se cierra: se registra el error en Logcat
-                android.util.Log.e("MPAZ", "Error en operación de base de datos", e)
+                // Si algo falla (microservicio apagado, error 409, etc.) la app no se cierra:
+                // se registra en Logcat y se avisa a la persona con un mensaje claro.
+                android.util.Log.e("MPAZ", "Error en la operación", e)
+                Toast.makeText(getApplication(), mensajeDeError(e), Toast.LENGTH_LONG).show()
             } finally {
                 // Garantiza que el indicador de carga se desactive al finalizar (éxito o error)
                 _isLoading.value = false

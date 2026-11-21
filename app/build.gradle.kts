@@ -60,6 +60,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // Red: Retrofit (microservicio propio + API externa)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
     // Pruebas
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

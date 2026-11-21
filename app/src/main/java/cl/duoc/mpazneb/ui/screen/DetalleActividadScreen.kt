@@ -73,6 +73,21 @@ fun DetalleActividadScreen(
         mensaje?.let { snackbar.showSnackbar(it); viewModel.mensaje.value = null }
     }
 
+    // Cuando el microservicio confirma que se eliminó, se vuelve al panel.
+    val eliminada by viewModel.eliminada.collectAsState()
+    LaunchedEffect(eliminada) { if (eliminada) onVolver() }
+    var confirmarEliminar by remember { mutableStateOf(false) }
+
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("¿Eliminar actividad?") },
+            text = { Text("Se eliminará del microservicio junto con sus preguntas.") },
+            confirmButton = { TextButton(onClick = { viewModel.eliminarActividad(); confirmarEliminar = false }) { Text("Eliminar") } },
+            dismissButton = { TextButton(onClick = { confirmarEliminar = false }) { Text("Cancelar") } }
+        )
+    }
+
     porEliminar?.let { pregunta ->
         AlertDialog(
             onDismissRequest = { porEliminar = null },
@@ -134,6 +149,15 @@ fun DetalleActividadScreen(
                         }
                     } else {
                         BotonPrincipal("Dejar disponible para los estudiantes", onClick = { viewModel.cambiarEstado(EstadoActividad.DISPONIBLE) })
+                    }
+                }
+                // Solo los borradores se pueden eliminar (regla también validada en el microservicio).
+                if (actividad.estado == EstadoActividad.BORRADOR) {
+                    item {
+                        OutlinedButton(onClick = { confirmarEliminar = true }, modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)
+                            Text("  Eliminar actividad", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }

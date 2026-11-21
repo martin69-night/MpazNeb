@@ -78,6 +78,7 @@ import cl.duoc.mpazneb.ui.components.TextoVacio
 import cl.duoc.mpazneb.ui.components.rememberPedirUbicacion
 import cl.duoc.mpazneb.ui.theme.Verde
 import cl.duoc.mpazneb.viewmodel.ActividadesViewModel
+import cl.duoc.mpazneb.viewmodel.Conexion
 import cl.duoc.mpazneb.viewmodel.EscuelaViewModel
 import cl.duoc.mpazneb.viewmodel.EstudiantesViewModel
 import cl.duoc.mpazneb.viewmodel.PanelViewModel
@@ -195,6 +196,7 @@ private fun PerfilTab(viewModel: PerfilViewModel = viewModel()) {
 private fun ActividadesTab(onVer: (Long) -> Unit, viewModel: ActividadesViewModel = viewModel()) {
     val ui by viewModel.uiState.collectAsState()
     LazyColumn(contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item { AvisoConexion(ui.conexion, onReintentar = viewModel::sincronizar) }
         item {
             SelectorChips("Módulo", listOf(null) + Modulo.entries, ui.modulo, { it?.etiqueta ?: "Todos" }, viewModel::filtrarModulo)
         }
@@ -205,6 +207,27 @@ private fun ActividadesTab(onVer: (Long) -> Unit, viewModel: ActividadesViewMode
         // ANIMACIÓN: animateItem() reacomoda las tarjetas al filtrar.
         items(ui.actividades, key = { it.id }) { actividad ->
             TarjetaActividad(actividad, onClick = { onVer(actividad.id) }, modifier = Modifier.animateItem())
+        }
+    }
+}
+
+/** Muestra si las actividades vienen del microservicio o de lo guardado en el teléfono. */
+@Composable
+private fun AvisoConexion(conexion: Conexion, onReintentar: () -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                when (conexion) {
+                    Conexion.SINCRONIZANDO -> "🔄 Sincronizando con el microservicio…"
+                    Conexion.CONECTADO -> "🟢 Conectado al microservicio"
+                    Conexion.SIN_CONEXION -> "🔴 Sin conexión: se muestran los datos guardados en el teléfono"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            if (conexion != Conexion.SINCRONIZANDO) {
+                TextButton(onClick = onReintentar) { Text(if (conexion == Conexion.CONECTADO) "Actualizar" else "Reintentar") }
+            }
         }
     }
 }
