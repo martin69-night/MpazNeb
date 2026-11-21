@@ -23,4 +23,7 @@ interface ResultadoDao {
     /** Inserta y devuelve el id generado (se usa para guardar las respuestas del intento). */
     @Insert
     suspend fun insert(resultado: ResultadoEntity): Long
+
+    @Query("DELETE FROM resultados WHERE estudianteId = :estudianteId")
+    suspend fun deleteByEstudiante(estudianteId: Long)
 }

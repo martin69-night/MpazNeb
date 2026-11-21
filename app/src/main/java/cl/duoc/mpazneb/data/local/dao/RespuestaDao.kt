@@ -18,4 +18,7 @@ interface RespuestaDao {
 
     @Insert
     suspend fun insertAll(respuestas: List<RespuestaEntity>)
+
+    @Query("DELETE FROM respuestas WHERE resultadoId IN (SELECT id FROM resultados WHERE estudianteId = :estudianteId)")
+    suspend fun deleteByEstudiante(estudianteId: Long)
 }

@@ -98,4 +98,15 @@ class ProgresoViewModel(
             guardada.value = true
         }
     }
+
+    /** true cuando el estudiante se eliminó: la pantalla vuelve al panel. */
+    val eliminado = MutableStateFlow(false)
+
+    /** DELETE en estudiantes-service y luego se borra de Room (con su historial). */
+    fun eliminarEstudiante() {
+        executeOperation {
+            estudiantes.eliminar(estudianteId)
+            eliminado.value = true
+        }
+    }
 }

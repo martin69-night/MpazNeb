@@ -129,6 +129,19 @@ class EstudiantesViewModel(application: Application) : BaseViewModel(application
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), EstudiantesUiState())
 
     fun filtrarCurso(valor: Int?) { curso.value = valor }
+
+    /** MICROSERVICIO estudiantes-service: al abrir la pestaña se traen los estudiantes (GET) y se guardan en Room. */
+    init {
+        viewModelScope.launch {
+            try {
+                repository.sincronizar()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("MPAZ", "Sin conexión con estudiantes-service", e)
+            }
+        }
+    }
 }
 
 // ---------------- Pestaña Escuela (GPS) ----------------

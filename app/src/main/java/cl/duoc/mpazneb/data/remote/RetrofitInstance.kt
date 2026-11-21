@@ -10,13 +10,14 @@ import java.util.concurrent.TimeUnit
  * Singleton que contiene la configuración de Retrofit del MICROSERVICIO PROPIO (igual que la Guía 14).
  *
  * URL: http://localhost:8080/ funciona en el celular (USB) y en el emulador porque
- * iniciar-microservicio.bat ejecuta "adb reverse tcp:8080 tcp:8080", que redirige el
- * puerto 8080 del teléfono al puerto 8080 del PC donde corre Spring Boot.
+ * conectar-celular.bat ejecuta "adb reverse tcp:8080 tcp:8080" y "adb reverse tcp:8081 tcp:8081",
+ * que redirigen esos puertos del teléfono al PC donde corren los dos microservicios Spring Boot.
  * (Sin adb reverse, en el emulador se puede usar http://10.0.2.2:8080/)
  */
 object RetrofitInstance {
 
-    const val BASE_URL = "http://localhost:8080/"
+    const val BASE_URL = "http://localhost:8080/"              // actividades-service
+    const val BASE_URL_ESTUDIANTES = "http://localhost:8081/"  // estudiantes-service
 
     /** Muestra cada petición y respuesta en Logcat (filtrar por "okhttp"). */
     private val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
@@ -35,5 +36,15 @@ object RetrofitInstance {
             .addConverterFactory(GsonConverterFactory.create()) // Conversor JSON
             .build()
             .create(ApiService::class.java) // Implementa la interfaz ApiService
+    }
+
+    // Segundo microservicio: misma configuración, otro puerto
+    val estudiantesApi: EstudiantesApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_ESTUDIANTES)
+            .client(http)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(EstudiantesApiService::class.java)
     }
 }

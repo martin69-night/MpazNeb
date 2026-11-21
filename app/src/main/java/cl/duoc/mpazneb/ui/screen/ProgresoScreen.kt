@@ -15,6 +15,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,11 +72,30 @@ fun ProgresoScreen(
     // Estado solo visual: qué intento está abierto para ver sus respuestas.
     var abierto by rememberSaveable { mutableStateOf<Long?>(null) }
 
+    // Eliminar estudiante (microservicio estudiantes-service): se confirma y luego se vuelve al panel.
+    val eliminado by viewModel.eliminado.collectAsState()
+    LaunchedEffect(eliminado) { if (eliminado) onVolver() }
+    var confirmarEliminar by remember { mutableStateOf(false) }
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("¿Eliminar estudiante?") },
+            text = { Text("Se eliminará del microservicio junto con todo su historial de intentos.") },
+            confirmButton = { TextButton(onClick = { viewModel.eliminarEstudiante(); confirmarEliminar = false }) { Text("Eliminar") } },
+            dismissButton = { TextButton(onClick = { confirmarEliminar = false }) { Text("Cancelar") } }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Progreso") },
-                navigationIcon = { IconButton(onClick = onVolver) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                navigationIcon = { IconButton(onClick = onVolver) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
+                actions = {
+                    IconButton(onClick = { confirmarEliminar = true }) {
+                        Icon(Icons.Filled.Delete, "Eliminar estudiante", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
         }
     ) { padding ->

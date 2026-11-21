@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import cl.duoc.mpazneb.data.local.entity.EstudianteEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -33,4 +34,15 @@ interface EstudianteDao {
 
     @Update
     suspend fun update(estudiante: EstudianteEntity)
+
+    // ---------- Sincronización con estudiantes-service ----------
+
+    @Upsert
+    suspend fun upsert(estudiante: EstudianteEntity)
+
+    @Upsert
+    suspend fun upsertAll(estudiantes: List<EstudianteEntity>)
+
+    @Query("DELETE FROM estudiantes WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
