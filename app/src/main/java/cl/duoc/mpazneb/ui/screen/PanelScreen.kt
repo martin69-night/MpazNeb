@@ -74,6 +74,7 @@ import cl.duoc.mpazneb.ui.components.BotonGaleria
 import cl.duoc.mpazneb.ui.components.ChipEstado
 import cl.duoc.mpazneb.ui.components.DialogoCargando
 import cl.duoc.mpazneb.ui.components.SelectorChips
+import cl.duoc.mpazneb.ui.components.TarjetaFeriados
 import cl.duoc.mpazneb.ui.components.TextoVacio
 import cl.duoc.mpazneb.ui.components.rememberPedirUbicacion
 import cl.duoc.mpazneb.ui.theme.Verde
@@ -197,6 +198,7 @@ private fun ActividadesTab(onVer: (Long) -> Unit, viewModel: ActividadesViewMode
     val ui by viewModel.uiState.collectAsState()
     LazyColumn(contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { AvisoConexion(ui.conexion, onReintentar = viewModel::sincronizar) }
+        item { TarjetaFeriados() } // API externa (feriados), separada del microservicio
         item {
             SelectorChips("Módulo", listOf(null) + Modulo.entries, ui.modulo, { it?.etiqueta ?: "Todos" }, viewModel::filtrarModulo)
         }
